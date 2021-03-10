@@ -1,0 +1,140 @@
+---
+title: "Atalia_Horenshtien_Covid"
+author: "Atalia Horenshtien"
+date: "3/6/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+# setup and load libraries
+
+```{r setup, include=FALSE}
+##load libraries
+library(tidyverse)
+```
+
+```{r, include=FALSE}
+### working directory
+setwd("~/Documents/MsBA/Data strategy/class5")
+```
+
+```{r}
+##load the data
+covid_data = read.csv('owid-covid-data.csv')
+```
+
+```{r}
+colnames(covid_data)
+```
+
+# Layer 0:
+
+## Question: Who are the top 5 coutries that are doing the best in vaccination?
+
+## Graphic:
+```{r}
+#filter data for the recent record ('2021-02-28'), calculate the percentage_vaccinated and pick the top 5 coutries
+covid_data %>% 
+  filter(date == '2021-02-28') %>% 
+  mutate(percentage_vaccinated = people_vaccinated/population *100) %>% 
+  filter(percentage_vaccinated != 'NA') %>% 
+  select(location, percentage_vaccinated) %>% 
+  arrange(desc(percentage_vaccinated)) %>% 
+  head(n=5)
+```
+## Findings: Israel is doing the best with 54.57% of the population is being vaccinated as for Feb 28, 2021.
+
+I'm from Israel, therefore I'll continue my research on Israel data.
+```{r}
+##slice data for Israel
+covid_data_Israel = covid_data %>% 
+  filter(location == 'Israel')
+```
+
+# Layer 1:
+
+## Question: Is total deaths increase when total cases increase?
+
+## Graphic:
+
+```{r}
+
+covid_data_Israel %>%
+  ggplot(data = ., aes(x = total_cases, y = total_deaths)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title="sum of total cases per million vs stringency index")
+
+```
+## Findings: We can see that as total cases increase the total deaths increase as well. lets see if the time in lockdown has any affect on this. 
+
+# Layer 2:
+
+## Question: Is Israel Lockdown has a success? is being more time in lockdown reduce the total cases and/or total deaths per million?
+
+## Graphic:
+
+```{r}
+
+covid_data_Israel %>%
+  ggplot(data = ., aes(x = total_cases_per_million, y = stringency_index)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title="sum of total cases per million vs stringency index")
+
+```
+
+
+```{r}
+
+covid_data_Israel %>%
+  ggplot(data = ., aes(x = total_deaths_per_million, y = stringency_index)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title="sum of total deaths per million vs stringency index")
+
+```
+## Findings: Lockdown in Israel is not brining a significant success, we can see that there is a positive relationship between the stringency index and total cases per million and between the stringency index and total deathes per million. now that more than 50% of the popultion in the country is vaccinated, let's see if has any effect on the new cases 
+
+
+# Layer 3:
+
+## Question: Is vaccinating people helps with stop spreading the virus and reduce the new cases?
+
+## Graphic:
+
+```{r}
+
+covid_data_Israel %>%
+  ggplot(data = ., aes(x = people_vaccinated, y = new_cases)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title="new cases as people getting vaccinated")
+
+```
+## Findings: We can see that the as people getting more vaccinated the number of new cases decline. it make a lot of sense because vaccinated people are less to get the virus. 
+Israel started vaccination in middle of Dec 2020, therefore many people already got the second shot and are fully vaccinated. 71.31% of the vaccinated people are fully vaccinated. Let's see if it has an effect on the positive rate.
+
+```{r}
+covid_data_Israel %>% 
+  filter(date == '2021-02-28') %>% 
+  summarize(people_vaccinated, people_fully_vaccinated, percentage_fully_vaccinated = people_fully_vaccinated/people_vaccinated)
+
+```
+
+# Layer 4:
+
+## Question: Is a population with fully vaccinated people has a high or low positive rate?
+
+## Graphic:
+```{r}
+
+covid_data_Israel %>%
+  ggplot(data = ., aes(x = people_fully_vaccinated, y = positive_rate)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title="positive rate as people getting fully vaccinated")
+
+```
+## Findings: We can see that the positive rate is declining as more people are getting fully vaccinated.
